@@ -21,11 +21,12 @@ sp$p2 <- sp$p
 sp$p2[sp$p=="Oceania East" |sp$p=="Oceania West"] <- "Australia"
 
  t1<- tapply(sp$BDRICM, sp$p2, function(x){ 
-   x[x==250] <-NA
+   x[x>=200]<-NA
    return(cbind(min(x,na.rm=T), mean(x,na.rm=T), median(x,na.rm=T), max(x,na.rm=T),sum(!is.na(x)))) })
 
 t1 <- do.call(rbind,t1)
 x <-sp$BDRICM
+x[x>=200] <- NA
 t1 <- rbind(t1,cbind(min(x,na.rm=T), mean(x,na.rm=T), median(x,na.rm=T), max(x,na.rm=T),sum(!is.na(x))) )
 row.names(t1) <- c("Africa","Antarctica","Asia","Oceania","Europe","North America","South America", "World")
 

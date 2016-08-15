@@ -26,7 +26,7 @@ soilwell <- read.csv("ov.BDR_SoilGrids250m.csv")
 soilwell <- soilwell[,1:8]
 simulated <- subset(soilwell, soilwell$SOURCEDB== "Simulated")
 soilwell <- subset(soilwell, soilwell$SOURCEDB!= "Simulated")
-soilwell2 <- subset(soilwell, soilwell$BDRICM<250)
+soilwell2 <- subset(soilwell, soilwell$BDRICM<200)
 
 
 ####EDA for BDTICM
@@ -49,7 +49,7 @@ hist(soilwell2[soilwell2$SOURCEDB == "Wells",]$BDRICM, main = "", xlab = "Censor
 dev.off()
 par(mar = c(5.1,4.1,4.1,2.1), mfcol=c(1,1))
 summary(soilwell2$BDRICM)
-sum(soilwell$BDRICM==250)
+sum(soilwell$BDRICM>200)
 
 sum(!is.na(soilwell2[soilwell2$SOURCEDB!= "Wells",]$BDRICM))
 

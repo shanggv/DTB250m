@@ -156,7 +156,7 @@ axis(1, at = c(pat[1:(length(pat)-1)],dnum),
 points(cs$spo[,c(1,4)])
 lines(cs$spp[,c(1,5)],col="red")
 lines(cs$spp[,c(1,6)],col="blue")
-dev.copy(tiff,paste0(tname, "_cs.tif"),  width = 1000, height = 300,  units = "px")
+dev.copy(tiff,paste0(tname, "_cs.tif"),  width = 1000, height = 450,  units = "px")
 dev.off()
 
 
