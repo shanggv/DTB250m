@@ -74,7 +74,7 @@ Ken$Ken_utmf <- ifelse(Ken$Ken_utm<rn[1], rn[1], ifelse(Ken$Ken_utm>rn[2], rn[2]
 Ken$Ken_GSRSf <- ifelse(Ken$Ken_GSRS<rn[1], rn[1], ifelse(Ken$Ken_GSRS>rn[2], rn[2], Ken$Ken_GSRS))
 jpeg(file="Fig_Ken_comparison0.jpg", res=150, width=900, height=800)
 par(mai=c(0.8,0.8,0.5,0), oma=c(0,0,0,0),xaxs='i', yaxs='i')
-spplot(Ken_p, zcol = "BD",col.regions=SAGA_pal[[1]],main="Kentukey", cex=0.4,colorkey = FALSE,  sp.layout=list(state[which(state.n=="kentucky"),], col = 'black', lwd = 1), auto.key=FALSE, scales=list(draw=T), xlab="Easting (m)", ylab="Northing (m)" ,add =T)
+spplot(Ken_p, zcol = "BD",col.regions=SAGA_pal[[1]],main="kentucky", cex=0.4,colorkey = FALSE,  sp.layout=list(state[which(state.n=="kentucky"),], col = 'black', lwd = 1), auto.key=FALSE, scales=list(draw=T), xlab="Easting (m)", ylab="Northing (m)" ,add =T)
 dev.off()
 jpeg(file="Fig_Ken_comparison.jpg", res=150, width=750, height=750*2)
 #spplot(Ken, col.regions=SAGA_pal[[1]])
