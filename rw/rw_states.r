@@ -14,9 +14,9 @@ library(XML)
 options(stringsAsFactors = FALSE) # not usful for readShapePoints,
                                 # fix s_n == 10
 # change dir* if needed
-dir_f <- "E:\\data\\soildata\\depth\\points\\codegsifb\\head\\"
+dir_f <- "E:\\data\\soildata\\depth\\code\\head\\"
 source(paste(dir_f, "functions.r", sep = ""))
-source(paste(dir_f, "crawl.r", sep = ""))
+
 dir1  <- "E:\\data\\soildata\\depth\\points\\states\\"
 c_names  <- c("Source", "Long", "Lat", "D_BR", "D_water", "D_well", "Accu_xy")
 setwd(dir1)
@@ -25,23 +25,7 @@ states <- cbind(1:length(dirs), dirs)
 colnames(states) <- c("s_code", "states")
 states
 dir_out <- "E:\\data\\soildata\\depth\\points\\"#      s_code states
-# [1,] "1"    "Alaska"
-# [2,] "2"    "Arizona"
-# [3,] "3"    "Indiana"
-# [4,] "4"    "Iowa"
-# [5,] "5"    "Kansas"
-# [6,] "6"    "Kentuky"
-# [7,] "7"    "Maine"
-# [8,] "8"    "Minnesota"
-# [9,] "9"    "Missouri"
-#[10,] "10"   "Nevada"
-#[11,] "11"   "NewHampshire"
-#[12,] "12"   "Newyork"
-#[13,] "13"   "Ohio"
-#[14,] "14"   "Other"
-#[15,] "15"   "Pennsylvania"
-#[16,] "16"   "Tennessee"
-#[17,] "17"   "Vermont"
+
 
 swap2n <- function(a)
 {
@@ -201,10 +185,41 @@ del_unzip()
 #Latitude_Of_Origin: 0.00000000
 #Linear Unit:    Meter
 
+#-------------------------------Colorado
+#have position accuracy by description
+#too many 0 value, 0 are not kept for tmp2, but not tmp
+s_n <- 3
+setwd(paste(dir1, dirs[s_n], sep = ""))
+do_unzip()
+tmp <- readShapePoints(paste(getwd(),"\\tmp\\ds507_regolith_data",
+                             sep = ""))
+proj4string(tmp) <-
+  "+proj=utm +zone=13 +ellps=GRS80 +units=m +no_defs"
+tmp <- reproject(tmp)
+tmp <- cbind(tmp@coords,tmp@data$THICKNESS, tmp@data$THICK_QLFR)
+tmp <- tmp[is.na(tmp[,4]), 1:3]
+tmp <- cbind(tmp, NA, NA, "")
+tmp <- form_rec(tmp, s_n)
+
+tmp2 <- readShapePoints(paste(getwd(),"\\tmp\\rocky_flats_elev",
+                             sep = ""))
+proj4string(tmp2) <-
+  "+proj=utm +zone=13 +ellps=GRS80 +units=m +no_defs"
+tmp2 <- reproject(tmp2)
+tmp2 <- cbind(tmp2@coords,as.numeric(as.character(tmp2@data$THICKNESS)))
+tmp2 <- tmp2[!is.na(tmp2[,3]) & tmp2[,3] >0,]
+tmp2 <- cbind(tmp2, NA, NA, "")
+tmp2 <- form_rec(tmp2, s_n)
+rec.lst[[s_n]] <- rbind(tmp, tmp2)
+print_0(rec.lst[[s_n]][, 4])
+#"4 out of 989 is 0"
+del_unzip()
+
+
 #-------------------------------Indiana
 #have position accuracy by description
 #too many 0 value, 0 are not kept
-s_n <- 3
+s_n <- 4
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(),"\\tmp\\Waterwells_IDNR_IN",
@@ -235,7 +250,7 @@ del_unzip()
 #some kmz are missing, use the processed data
 #too many 0 value, 0 are not kept
 # get processed data
-s_n <- 4
+s_n <- 5
 setwd(paste(dir1, dirs[s_n], sep = ""))
 tmp <- read.table("hor1.txt", header = TRUE)
 tmp <- tmp[, c(5, 6, 3, 4, 2)]
@@ -291,7 +306,7 @@ print_0(rec.lst[[s_n]][, 4])
 
 #-------------------------------Kansas
 #0 are kept
-s_n <- 5
+s_n <- 6
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(),"\\tmp\\SouthCentral_KS_Bedrock_Wells_dd",
@@ -306,7 +321,7 @@ del_unzip()
 #-------------------------------Kentuky
 #too many 0 value, 0 are not kept
 #save xlsx as csv first in Excel
-s_n <- 6
+s_n <- 7
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- read.csv(paste(getwd(),"\\tmp\\waterwells\\waterwell.csv",
@@ -323,7 +338,7 @@ del_unzip()
 
 #-------------------------------Maine
 #0 are kept
-s_n <- 7
+s_n <- 8
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 dir2 <- "\\tmp\\mapping_applications\\well_database\\_python\\"
@@ -337,9 +352,46 @@ print_0(rec.lst[[s_n]][, 4])
 #"374 out of 41629 is 0"
 del_unzip()
 
+
+#-------------------------------Massachusetts
+#0 are not kept
+s_n <- 9
+setwd(paste(dir1, dirs[s_n], sep = ""))
+do_unzip()
+tmp <- read.csv(paste0(getwd(), "\\tmp\\myfile-dtb.csv"))
+tmp  <- tmp[, c("LONGITUDE", "LATITUDE", "DEPTH_TO_BEDROCK",
+                "WATER_LEVEL", "TOTAL_DEPTH")]
+tmp <- cbind(tmp,"")
+
+tmp2  <- readShapePoints(paste(getwd(),"\\tmp\\wellsite", sep = ""))
+proj4string(tmp2) <-
+  "+proj=utm +zone=12 +ellps=clrk66 +datum=NAD27 +units=m +no_defs"
+tmp2 <- cbind(tmp2@coords,tmp2$ELEVATION - tmp2$BEDROCK_EL, NA, NA, "")
+tmp2 <- tmp2[!is.na(tmp2[,3]) ,]
+rec.lst[[s_n]] <- rbind(form_rec(tmp, s_n),form_rec(tmp2, s_n))
+print_0(rec.lst[[s_n]][, 4])
+#"2026 out of 18431 is 0"
+rec.lst[[s_n]] <- rec.lst[[s_n]][rec.lst[[s_n]][, 4] > 0, ]
+del_unzip()
+
+#-------------------------------Michigan
+#0 are  kept
+s_n <- 10
+setwd(paste(dir1, dirs[s_n],  sep = ""))
+do_unzip()
+tmp  <- readShapePoints(paste(getwd(),"\\tmp\\wells_Complete", sep = ""))
+tmp <- cbind(tmp$LONGITUDE,tmp$LATITUDE,as.numeric(tmp$ROCK_TOP), NA, as.numeric(tmp$WELL_DEPTH))
+tmp <- tmp[tmp[,3]>=0,]
+hist(log1p(tmp[,3]))
+tmp <- cbind(tmp, "")
+rec.lst[[s_n]] <- form_rec(tmp, s_n)
+print_0(rec.lst[[s_n]][, 4])
+#"950 out of 86361 is 0"
+del_unzip()
+
 #-------------------------------Minnesota
 #0 are  kept
-s_n <- 8
+s_n <- 11
 setwd(paste(dir1, dirs[s_n], "\\dtb", sep = ""))
 do_unzip()
 dir2 <- "\\tmp\\OFR06_02\\"
@@ -364,7 +416,7 @@ del_unzip()
 
 #-------------------------------Missouri
 #0 are  kept
-s_n <- 9
+s_n <- 12
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(),  "\\tmp\\MO_2006_Well_Logs_shp",
@@ -395,7 +447,7 @@ del_unzip()
 #SELECT dbo_wlog.longitude, dbo_wlog.latitude, dbo_wlog.depth_bedrock
 #FROM dbo_wlog
 #where dbo_wlog.depth_bedrock>-0.001;
-s_n <- 10
+s_n <- 13
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 #mdb_file <- paste(getwd(), "/tmp/wlog.mdb", sep = "")
@@ -410,7 +462,7 @@ print_0(rec.lst[[s_n]][, 4])
 del_unzip()
 #-------------------------------NewHampshire
 #0 are  kept
-s_n <- 11
+s_n <- 14
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- read.csv(".\\tmp\\all.txt", sep = "\t", colClasses = "character")
@@ -424,10 +476,22 @@ tmp2 <- tmp2[tmp2$lon != "lon",]
 tmp2 <- tmp2[!is.na(tmp2$lon), ]
 tmp <- join(tmp2, tmp, type = "left", by = "WRB_NUMBER")
 tmp  <- cbind(tmp[, c("lon", "lat", "DEPTH_TO_BEDROCK", "STATIC_WATER_LEVEL",
-            "TOTAL_DEPTH")], NA)
+            "TOTAL_DEPTH")])
+tmp <- sapply(tmp, as.numeric)
+
+tmp2 <- readShapePoints(paste(getwd(), "\\tmp\\water_wells\\wells",
+                             sep = ""))
+proj4string(tmp2) <-
+"+proj=tmerc +lat_0=42.5 +lon_0=-71.66666666666667 +k=0.9999666666666667 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs "
+tmp2 <- reproject(tmp2)
+tmp2 <- cbind(tmp2@coords, tmp2$BDKD, tmp2$SWL, tmp2$TOTD)
+tmp<- rbind(tmp,tmp2)
+tmp <- tmp[!duplicated(tmp[,1:2]),]
+tmp <- cbind(tmp,"")
+
 rec.lst[[s_n]] <- form_rec(tmp, s_n)
 print_0(rec.lst[[s_n]][, 4])
-# "0 out of 19782 is 0"
+# "2164 out of 56542 is 0"
 del_unzip()
 
 #tmp4 <- tmp[!(tmp$WRB_NUMBER %in% tmp2$WRB_NUMBER), ]
@@ -452,7 +516,7 @@ del_unzip()
 
 ---------------------Newyork
 #0 are  kept
-s_n <- 12
+s_n <- 15
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(), "\\tmp\\WaterWellProgram",
@@ -471,21 +535,26 @@ print_0(rec.lst[[s_n]][, 4])
 #"165 out of 14652 is 0"
 del_unzip()
 
+#-------------------------------North Dakota
+#0 are not kept
+s_n <- 16
+setwd(paste(dir1, dirs[s_n], sep = ""))
+do_unzip()
+tmp <- readShapePoints(paste(getwd(), "\\tmp\\NDGISHubData\\NDHUB_WATERDATASITES_point",  sep = ""))
+tmp <- cbind(tmp$LONGITUDE, tmp$LATITUDE, tmp$BEDROCK_DE,NA, tmp$TOTAL_DEPT)
+tmp <- tmp[tmp[,3]<1000 &tmp[,3]>0,]
+tmp <- cbind(tmp,"")
+rec.lst[[s_n]] <- form_rec(tmp, s_n)
+print_0(rec.lst[[s_n]][, 4])
+del_unzip()
 
-#PROJCS["NAD_1983_UTM_Zone_18N",GEOGCS["GCS_North_American_1983",
-#DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137.0,298.257222101]],
-#PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],
-#PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],
-#PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-75.0],
-#PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],
-#UNIT["Meter",1.0]]
 
 #-------------------------------Ohio
 #0 are  kept
 #determine depth ==0 if depth_CALC is near 0
 #Attribute_Label: DEPTH_SFX -----useful but not used here
 #Attribute_Definition: Indicates a well that does not reach bedrock.
-s_n <- 13
+s_n <- 17
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(), "\\tmp\\bedrock\\BT24K\\btpoints",
@@ -517,7 +586,7 @@ del_unzip()
 #0 are  kept
 #problems in reading mdb files ?????????????????????????????
 #export PTS_DEPT.DBF from mdb
-s_n <- 14
+s_n <- 18
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- foreign :: read.dbf(paste(getwd(),"\\tmp\\PTS_DEPT.DBF", sep = ""))
@@ -533,7 +602,7 @@ del_unzip()
 #BedrockNotReached-----useful but not used here
 #problems in reading mdb files ?????????????????????????????
 #export TBLGENSI.DBF from mdb
-s_n <- 15
+s_n <- 19
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- foreign :: read.dbf(paste(getwd(),"\\tmp\\TBLGENSI.DBF", sep = ""))
@@ -566,7 +635,7 @@ del_unzip()
 
 #-------------------------------Tennessee
 #0 are  kept
-s_n <- 16
+s_n <- 20
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(), "\\tmp\\regolith",
@@ -586,7 +655,7 @@ del_unzip()
 
 #-------------------------------Vermont
 #0 are not kept
-s_n <- 17
+s_n <- 21
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- readShapePoints(paste(getwd(), "\\tmp\\Water_PVTWELLS_point",
@@ -612,6 +681,21 @@ del_unzip()
 #PARAMETER["Latitude_Of_Origin",42.5],UNIT["Meter",1.0]]
 
 
+#-------------------------------Wisconsin
+#0 are not kept
+s_n <- 22
+setwd(paste(dir1, dirs[s_n], sep = ""))
+do_unzip()
+tmp <- readShapePoints(paste(getwd(), "\\tmp\\M143-DI\\data\\sk_d2bwell0 point",
+                             sep = ""))
+proj4string(tmp) <-
+  "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +ellps=GRS80 +units=m +no_defs"
+tmp <- reproject(tmp)
+tmp <- cbind(tmp@coords,tmp$FT_TO_ROCK,NA,NA,"")
+rec.lst[[s_n]] <- form_rec(tmp, s_n)
+print_0(rec.lst[[s_n]][, 4])
+#"10 out of 1337 is 0"
+del_unzip()
 #library(foreign)
 #library(maptools)
 #library(rgdal)
@@ -675,8 +759,11 @@ for( i in 2:6)
 }
 #wells[wells[,3]<20,]
 wells <- wells[wells[, 4] < 4000, ]
+#get rid of duplicated?
+#sum(duplicated(wells[,2:4]))
+wells <- wells[!duplicated(wells[,2:4]),]
 print_0(wells[,4])
-#"2718 out of 661970 is 0"
+#"5787 out of 803559 is 0"
 
 #-------------------------------get the list of accuracy of position
 #levels(as.factor(wells[, 7]))

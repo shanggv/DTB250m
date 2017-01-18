@@ -3,6 +3,8 @@ library(rgdal)
 library(maptools)
 library(plotKML)
 library(stringr)
+library(foreign)
+library(plyr)
 
 #dir_out <- "E:\\data\\soildata\\depth\\points\\profs\\well\\"
 #load(paste(dir_out, "ca.RData", sep = ""))
@@ -11,7 +13,7 @@ library(stringr)
 options(stringsAsFactors = FALSE) # not usful for readShapePoints, 
                                 # fix s_n == 1
 # change dir* if needed
-dir_f <- "E:\\data\\soildata\\depth\\points\\codegsifb\\head\\"
+dir_f <- "E:\\data\\soildata\\depth\\code\\head\\"
 source(paste(dir_f, "functions.r", sep = ""))
 dir1 <- "E:\\data\\soildata\\depth\\points\\canada\\"
 c_names  <- c("Source", "Long", "Lat", "D_BR", "D_water", "D_well", "Accu_xy") 
@@ -50,8 +52,73 @@ print_0(rec.lst[[s_n]][, 4])
 del_unzip()
 
 #-------------------------------GINwaterwell
-# can be derived but bot reliable to use
 
+do_unzip2 <- function()#unzip zip files
+{
+  zfiles <- shell("dir *.zip /B", intern = T)
+  for(i in 1 :length(zfiles))
+  {
+    unzip(zfiles[i], exdir = paste0("tmp\\",i))
+  }
+}
+s_n <- 2 
+setwd(paste(dir1, dirs[s_n], sep = ""))
+do_unzip2()
+
+#----------------------------Alberta  
+#Can not open the big well_log.dbf
+
+#----------------------------Manitoba  
+#0 are kept
+tmp  <- readShapePoints(paste(getwd(), 
+                              "\\tmp\\2\\well", sep = ""))
+tmp <- cbind(tmp$SF_ID,tmp@coords[,1:2],tmp$WELL_DEPTH)
+tmp2 <- read.dbf(paste0(getwd(), "\\tmp\\2\\well_log.dbf"))
+tmp12 <-  cbind(tmp2$SF_ID, tmp2$FROM_DIST, as.character(tmp2$GU_NAME), as.character(tmp2$NAME))
+tmp0 <- c("Carbonate sedimentary rock","Igneous rock","Metamorphic rock","Sandstone","Shale","Bedrock")
+tmp2 <- tmp12[tmp12[,4] %in% tmp0,]
+tmp2 <- tapply(as.numeric(tmp2[,2]),tmp2[,1],min)
+tmp2 <- cbind(as.numeric(names(tmp2)),tmp2)
+
+tmp02 <- join(as.data.frame(tmp2),as.data.frame(tmp),by="V1",type = "left")
+range(tmp02[,2])
+
+#----------------------------Saskatchewan 
+#0 are kept
+tmp  <- readShapePoints(paste(getwd(), 
+                              "\\tmp\\3\\well", sep = ""))
+tmp <- cbind(tmp$SF_ID,tmp@coords[,1:2],tmp$WELL_DEPTH)
+tmp2 <- read.dbf(paste0(getwd(), "\\tmp\\3\\well_log.dbf"))
+tmp2 <-  cbind(tmp2$SF_ID, tmp2$FROM_DIST, as.character(tmp2$NAME))
+tmp3 <- c("Shale","Sandstone","Bedrock","Sedimentary rock","Granite",
+  "Limestone","Siltstone","Dolostone")
+tmp2 <- tmp2[tmp2[,3] %in% tmp3,]
+tmp2 <- tapply(as.numeric(tmp2[,2]),tmp2[,1],min)
+tmp2 <- cbind(as.numeric(names(tmp2)),tmp2)
+tmp03 <- join(as.data.frame(tmp2),as.data.frame(tmp),by="V1",type = "left")
+range(tmp03[,2])
+
+#----------------------------Yukon 
+#0 are kept
+
+tmp  <- readShapePoints(paste(getwd(), 
+                              "\\tmp\\4\\well", sep = ""))
+tmp <- cbind(tmp$SF_ID,tmp@coords[,1:2],tmp$WELL_DEPTH)
+tmp2 <- read.dbf(paste0(getwd(), "\\tmp\\4\\well_log.dbf"))
+tmp2 <- cbind(tmp2$SF_ID,tmp2$FROM_DIST,substr(as.character(tmp2$GU_NAME),1,1))
+tmp2 <- tmp2[tmp2[,3]=="1",]
+tmp2 <- tapply(as.numeric(tmp2[,2]),tmp2[,1],min)
+tmp2 <- cbind(as.numeric(names(tmp2)),tmp2)
+range(tmp2[,2])
+tmp04 <- join(as.data.frame(tmp2),as.data.frame(tmp),by="V1",type = "left")
+range(tmp04[,2])
+#hist(tmp03[,2],breaks = 200,xlim=c(0,200))
+tmp <-rbind(tmp02,tmp03,tmp04)
+tmp <- cbind(tmp[,3], tmp[,4],tmp[,2],NA,tmp[,5],"")
+rec.lst[[s_n]] <- form_rec(tmp, s_n)
+print_0(rec.lst[[s_n]][, 4])
+#"1119 out of 80212 is 0"
+del_unzip()
 #-------------------------------Nova Scotia, feet
 #export well.txt from mde file
 #0 are kept
@@ -59,7 +126,7 @@ s_n <- 3
 setwd(paste(dir1, dirs[s_n], sep = ""))
 do_unzip()
 tmp <- read.table(paste(getwd(),"\\tmp\\well.txt", sep = ""), 
-        sep = ",", head = T)
+        sep = "\t", head = T)
 tmp <- tmp[, c("Easting", "Northing", "DepthToBedrock",  
     "wyStaticLevel", "TotalOrFinishedDepth", "UTMAccuracy")] 
 tmp <- tmp[!(is.na(tmp[, 1]) | is.na(tmp[,2])| is.na(tmp[,3])), ]   
@@ -199,8 +266,9 @@ for( i in 2:6)
     print(max(wells[i], na.rm = TRUE))
     print(min(wells[i], na.rm = TRUE))
 }
+wells <- wells[!duplicated(wells[,2:4]),]
 print_0(wells[, 4])
-#"4593 out of 580063 is 0"
+#"5293 out of 625945 is 0"
 #-------------------------------get the list of accuracy of position
 #levels(as.factor(wells[, 7]))
 s_n = 1
